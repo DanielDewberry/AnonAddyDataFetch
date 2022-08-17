@@ -3,10 +3,19 @@
 
 """Fetch AnonAddy data and generate a CSV output file."""
 
+import argparse
 import csv
 import logging
 
 import requests
+
+
+def argument_parser_factory():
+    """Create the argument parser."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('token', help='The AnonAddy API token')
+    parser.add_argument('filename', help='The filename to overwrite with CSV data')
+    return parser
 
 
 def logger_factory(logging_level) -> None:
@@ -96,6 +105,7 @@ def main(token: str, filename: str):
 
 if __name__ == '__main__':
     logger_factory(logging.INFO)
-    token = '42'
-    csv_filename = 'my csv filename'
-    main(token, csv_filename)
+    parser = argument_parser_factory()
+    args = parser.parse_args()
+
+    main(args.token, args.filename)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-"""Fetch anonady data and generate a CSV output file."""
+"""Fetch AnonAddy data and generate a CSV output file."""
 
 import csv
 import logging

@@ -6,6 +6,7 @@
 import argparse
 import csv
 import logging
+from typing import List
 
 import requests
 
@@ -55,12 +56,12 @@ def request_page(page_number: int, token: str):
     return requests.get(base_url, params=params, headers=headers)
 
 
-def perform_fetches(token: str):
+def perform_fetches(token: str, datapoints: List[str]):
     """Coordinate all data fetches until no data is returned."""
     logger = logging.getLogger('email-info-fetcher')
 
     data_list = [
-        ('email', 'description'),
+        datapoints,
         ]
 
     page_number = 0
@@ -79,7 +80,7 @@ def perform_fetches(token: str):
             break
 
         for datum in page_data:
-            data_list.append((datum['email'], datum['description']))
+            data_list.append([datum[datapoint] for datapoint in datapoints])
 
     return data_list
 
@@ -98,11 +99,11 @@ def write_data_to_csv(filename, data):
             csv_writer.writerow(record)
 
 
-def main(token: str, filename: str):
+def main(token: str, filename: str, datapoints: List[str]):
     """Application entrypoint."""
     logger = logging.getLogger('email-info-fetcher')
     logger.info('Startup')
-    data = perform_fetches(token)
+    data = perform_fetches(token, datapoints)
     write_data_to_csv(filename, data)
     logger.info('Done')
 
@@ -141,4 +142,24 @@ if __name__ == '__main__':
     logging_level = logging_level_from_string(args.log_level)
     logger_factory(logging_level)
 
-    main(args.token, args.filename)
+    datapoints = [
+        'id',
+        'user_id',
+        'aliasable_id',
+        'aliasable_type',
+        'local_part',
+        'extension',
+        'domain',
+        'email',
+        'active',
+        'description',
+        'emails_forwarded',
+        'emails_blocked',
+        'emails_replied',
+        'emails_sent',
+        'recipients',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        ]
+    main(args.token, args.filename, datapoints)

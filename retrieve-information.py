@@ -15,6 +15,10 @@ def argument_parser_factory():
     parser = argparse.ArgumentParser()
     parser.add_argument('token', help='The AnonAddy API token')
     parser.add_argument('filename', help='The filename to overwrite with CSV data')
+    parser.add_argument('--log-level',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        default='info',
+                        help='The logging level which will affect reporting information')
     return parser
 
 
@@ -103,9 +107,38 @@ def main(token: str, filename: str):
     logger.info('Done')
 
 
+def logging_level_from_string(log_level: str):
+    """Translate a text logging level to it's equivilent object.
+
+    Input Value | Mapping
+    ------------+-----------------
+    debug       | logging.DEBUG
+    info        | logging.INFO
+    warning     | logging.WARNING
+    error       | logging.ERROR
+    critical    | logging.CRITICAL
+    fatal       | logging.FATAL
+    """
+    mapping = {
+        'debug':        logging.DEBUG,
+        'info':         logging.INFO,
+        'warning':      logging.WARNING,
+        'error':        logging.ERROR,
+        'critical':     logging.CRITICAL,
+        'fatal':        logging.FATAL,
+        }
+    logging_level = mapping.get(log_level, None)
+    if logging_level is None:
+        raise ValueError('Unknown level supplied.')
+
+    return logging_level
+
+
 if __name__ == '__main__':
-    logger_factory(logging.INFO)
     parser = argument_parser_factory()
     args = parser.parse_args()
+
+    logging_level = logging_level_from_string(args.log_level)
+    logger_factory(logging_level)
 
     main(args.token, args.filename)

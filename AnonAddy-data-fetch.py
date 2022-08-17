@@ -20,6 +20,10 @@ def argument_parser_factory():
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         default='info',
                         help='The logging level which will affect reporting information')
+    parser.add_argument('--columns',
+                        default=None,
+                        help='Comma-separated list of column names to use.  All columns selected by default.')
+
     return parser
 
 
@@ -56,12 +60,12 @@ def request_page(page_number: int, token: str):
     return requests.get(base_url, params=params, headers=headers)
 
 
-def perform_fetches(token: str, datapoints: List[str]):
+def perform_fetches(token: str, column_names: List[str]):
     """Coordinate all data fetches until no data is returned."""
     logger = logging.getLogger('email-info-fetcher')
 
     data_list = [
-        datapoints,
+        column_names,
         ]
 
     page_number = 0
@@ -80,7 +84,7 @@ def perform_fetches(token: str, datapoints: List[str]):
             break
 
         for datum in page_data:
-            data_list.append([datum[datapoint] for datapoint in datapoints])
+            data_list.append([datum[column_name] for column_name in column_names])
 
     return data_list
 
@@ -99,11 +103,11 @@ def write_data_to_csv(filename, data):
             csv_writer.writerow(record)
 
 
-def main(token: str, filename: str, datapoints: List[str]):
+def main(token: str, filename: str, column_names: List[str]):
     """Application entrypoint."""
     logger = logging.getLogger('email-info-fetcher')
     logger.info('Startup')
-    data = perform_fetches(token, datapoints)
+    data = perform_fetches(token, column_names)
     write_data_to_csv(filename, data)
     logger.info('Done')
 
@@ -135,14 +139,9 @@ def logging_level_from_string(log_level: str):
     return logging_level
 
 
-if __name__ == '__main__':
-    parser = argument_parser_factory()
-    args = parser.parse_args()
-
-    logging_level = logging_level_from_string(args.log_level)
-    logger_factory(logging_level)
-
-    datapoints = [
+def main_column_list() -> List[str]:
+    """Return the full list of permissible column names."""
+    return [
         'id',
         'user_id',
         'aliasable_id',
@@ -162,4 +161,34 @@ if __name__ == '__main__':
         'updated_at',
         'deleted_at',
         ]
-    main(args.token, args.filename, datapoints)
+
+
+def validate_user_column_selection(selection: List[str]) -> bool:
+    """Validate the list of supplied columns against the master list."""
+    logger = logging.getLogger('email-info-fetcher')
+    main_list = main_column_list()
+    for column_name in selection:
+        if column_name not in main_list:
+            logger.warning('Column "%s" not in main list', column_name)
+            return False
+        else:
+            logger.debug('Column "%s" in main list', column_name)
+    return True
+
+
+if __name__ == '__main__':
+    parser = argument_parser_factory()
+    args = parser.parse_args()
+
+    logging_level = logging_level_from_string(args.log_level)
+    logger_factory(logging_level)
+    logger = logging.getLogger('email-info-fetcher')
+
+    if args.columns is None:
+        column_names = main_column_list()
+    else:
+        column_names = [column_name.strip() for column_name in args.columns.split(',')]
+        if validate_user_column_selection(column_names) is False:
+            exit(1)
+
+    main(args.token, args.filename, column_names)

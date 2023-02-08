@@ -68,7 +68,9 @@ class MissingKey:
         dict.get('key', MissingKey)
     """
 
-    pass
+    def __init__(self):
+        """Construct with no data."""
+        pass
 
 
 def perform_fetches(token: str, column_names: List[str]):
@@ -97,7 +99,7 @@ def perform_fetches(token: str, column_names: List[str]):
         for datum in page_data:
             missing_keys = []
             for column_name in column_names:
-                if isinstance(datum.get(column_name, MissingKey), MissingKey):
+                if isinstance(datum.get(column_name, MissingKey()), MissingKey):
                     missing_keys.append(column_name)
             if len(missing_keys) > 0:
                 logger.error('Missing keys detected: [%s]', ', '.join(missing_keys))

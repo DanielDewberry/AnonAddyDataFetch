@@ -6,6 +6,7 @@
 import argparse
 import csv
 import logging
+import sys
 from typing import List
 
 import requests
@@ -60,6 +61,16 @@ def request_page(page_number: int, token: str):
     return requests.get(base_url, params=params, headers=headers)
 
 
+class MissingKey:
+    """Represents missing key in dictionary lookups.
+
+    Usage:
+        dict.get('key', MissingKey)
+    """
+
+    pass
+
+
 def perform_fetches(token: str, column_names: List[str]):
     """Coordinate all data fetches until no data is returned."""
     logger = logging.getLogger('email-info-fetcher')
@@ -84,6 +95,13 @@ def perform_fetches(token: str, column_names: List[str]):
             break
 
         for datum in page_data:
+            missing_keys = []
+            for column_name in column_names:
+                if isinstance(datum.get(column_name, MissingKey), MissingKey):
+                    missing_keys.append(column_name)
+            if len(missing_keys) > 0:
+                logger.error('Missing keys detected: [%s]', ', '.join(missing_keys))
+                sys.exit(1)
             data_list.append([datum[column_name] for column_name in column_names])
 
     return data_list

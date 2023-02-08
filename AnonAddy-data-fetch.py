@@ -61,16 +61,13 @@ def request_page(page_number: int, token: str):
     return requests.get(base_url, params=params, headers=headers)
 
 
-class MissingKey:
-    """Represents missing key in dictionary lookups.
-
-    Usage:
-        dict.get('key', MissingKey)
-    """
-
-    def __init__(self):
-        """Construct with no data."""
-        pass
+def key_is_missing(d: dict, key: str):
+    """Determine whether a key is missing from a dictionary."""
+    try:
+        d.get(key)
+        return False
+    except KeyError:
+        return True
 
 
 def perform_fetches(token: str, column_names: List[str]):
@@ -97,10 +94,7 @@ def perform_fetches(token: str, column_names: List[str]):
             break
 
         for datum in page_data:
-            missing_keys = []
-            for column_name in column_names:
-                if isinstance(datum.get(column_name, MissingKey()), MissingKey):
-                    missing_keys.append(column_name)
+            missing_keys = [column_name for column_name in column_names if key_is_missing(datum, column_name)]
             if len(missing_keys) > 0:
                 logger.error('Missing keys detected: [%s]', ', '.join(missing_keys))
                 sys.exit(1)

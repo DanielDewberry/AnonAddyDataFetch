@@ -1,7 +1,7 @@
 # Anonaddy Data Fetch
 
 
-Back Anonaddy email address data with ease.
+Backup Anonaddy email address data with ease.
 
 
 ## Features

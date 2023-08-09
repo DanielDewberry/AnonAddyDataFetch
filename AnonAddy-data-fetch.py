@@ -49,7 +49,7 @@ def request_page(page_number: int, token: str):
     logger = logging.getLogger('email-info-fetcher')
     page_size = 100
 
-    base_url = 'https://app.anonaddy.com/api/v1/aliases'
+    base_url = 'https://app.addy.io/api/v1/aliases'
     params = {'page[size]': page_size,
               'page[number]': page_number,
               }

@@ -1,7 +1,7 @@
-# Anonaddy Data Fetch
+# Addy.io Data Fetch
 
 
-Backup Anonaddy email address data with ease.
+Backup Addy.io email address data with ease.
 
 
 ## Features
@@ -29,8 +29,8 @@ Please contact me before dedicating any time to creating merge requests. Let's t
 ## Installation
 
 ```
-sudo cp AnonAddy-data-fetch.py /usr/local/bin/
-sudo chmod 555 /usr/local/bin/AnonAddy-data-fetch.py
+sudo cp addyio-data-fetch.py /usr/local/bin/
+sudo chmod 555 /usr/local/bin/addyio-data-fetch.py
 ```
 
 
@@ -39,15 +39,15 @@ sudo chmod 555 /usr/local/bin/AnonAddy-data-fetch.py
 See the usage information:
 
 ```
-# AnonAddy-data-fetch.py --help
+# addyio-data-fetch.py --help
 
-usage: AnonAddy-data-fetch.py [-h]
+usage: addyio-data-fetch.py [-h]
                               [--log-level {debug,info,warning,error,critical}]
                               [--columns COLUMNS]
                               token filename
 
 positional arguments:
-  token                 The AnonAddy API token
+  token                 The Addy.io API token
   filename              The filename to overwrite with CSV data
 
 optional arguments:
@@ -66,19 +66,19 @@ It is recommended that you create a backup runner:
 
 
 ```bash
-mkdir -p "${HOME}/backups/anonaddy"
-mkdir -p "${HOME}/.anonaddy"
-echo 'YourToken' > "${HOME}/.anonaddy/token-file"
+mkdir -p "${HOME}/backups/addyio"
+mkdir -p "${HOME}/.addyio"
+echo 'YourToken' > "${HOME}/.addyio/token-file"
 ```
 
-`"${HOME}/.anonaddy/token-file"`:
+`"${HOME}/.addyio/token-file"`:
 
 ```
 ashqeghehajhkjahdkjad
 ```
 
 
-`${HOME}/.local/bin/backup-anonaddy`:
+`${HOME}/.local/bin/backup-addyio`:
 
 ```bash
 #!/bin/bash
@@ -89,10 +89,10 @@ if ! Now="$(date -Is)"; then
 fi
 readonly Now
 
-declare -r TokenFile="${HOME}/.anonaddy/token-file"
-declare -r BackupFile="${HOME}/backups/anonaddy/AnonAddy-mail-list-${Now}.csv"
+declare -r TokenFile="${HOME}/.addyio/token-file"
+declare -r BackupFile="${HOME}/backups/addyio/addyio-mail-list-${Now}.csv"
 
-AnonAddy-data-fetch.py "$(< "${TokenFile}")" "${BackupFile}"
+addyio-data-fetch.py "$(< "${TokenFile}")" "${BackupFile}"
 exit
 ```
 
@@ -108,14 +108,14 @@ Crontab:
 
 ```bash
 # Midnight every day  # help: https://crontab.guru/
-0 0 * * * /home/username/.local/bin/backup-anonaddy
+0 0 * * * /home/username/.local/bin/backup-addyio
 ```
 
 
 ### Systemd Timer example
 
 
-#### backup-anonaddy.service
+#### backup-addyio.service
 
 ```
 [Unit]
@@ -125,18 +125,18 @@ Wants=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/username/.local/bin/backup-anonaddy
+ExecStart=/home/username/.local/bin/backup-addyio
 ```
 
-#### backup-anonaddy.timer
+#### backup-addyio.timer
 
 ```
 [Unit]
-Description=Fire the backup-anonaddy service
-Requires=backup-anonaddy.service
+Description=Fire the backup-addyio service
+Requires=backup-addyio.service
 
 [Timer]
-Unit=backup-anonaddy.service
+Unit=backup-addyio.service
 OnCalendar=*-*-* 00:00:00
 AccuracySec=60s
 Persistent=true
@@ -149,10 +149,10 @@ WantedBy=timers.target
 #### Install the service and timer
 
 ```bash
-sudo cp backup-anonaddy.service /etc/systemd/system/
-sudo cp backup-anonaddy.timer /etc/systemd/system/
+sudo cp backup-addyio.service /etc/systemd/system/
+sudo cp backup-addyio.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now backup-anonaddy.timer
+sudo systemctl enable --now backup-addyio.timer
 ```
 
 

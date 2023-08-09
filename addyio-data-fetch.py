@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-"""Fetch AnonAddy data and generate a CSV output file."""
+"""Fetch addy.io data and generate a CSV output file."""
 
 import argparse
 import csv
@@ -15,7 +15,7 @@ import requests
 def argument_parser_factory():
     """Create the argument parser."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('token', help='The AnonAddy API token')
+    parser.add_argument('token', help='The addy.io API token')
     parser.add_argument('filename', help='The filename to overwrite with CSV data')
     parser.add_argument('--log-level',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],

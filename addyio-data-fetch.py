@@ -7,16 +7,16 @@ import argparse
 import csv
 import logging
 import sys
-from typing import List
+from typing import Any, Dict, List, Optional
 
 import requests
 
 
-def argument_parser_factory():
+def argument_parser_factory() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser()
     parser.add_argument('token', help='The addy.io API token')
-    parser.add_argument('filename', help='The filename to overwrite with CSV data')
+    parser.add_argument('output_file', help='The filename to overwrite with CSV data')
     parser.add_argument('--log-level',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         default='info',
@@ -47,7 +47,7 @@ def request_page(page_number: int, token: str):
     The pagesize is size is set internally.
     """
     logger = logging.getLogger('email-info-fetcher')
-    page_size = 100
+    page_size: int = 100
 
     base_url = 'https://app.addy.io/api/v1/aliases'
     params = {'page[size]': page_size,
@@ -61,24 +61,12 @@ def request_page(page_number: int, token: str):
     return requests.get(base_url, params=params, headers=headers)
 
 
-def key_is_missing(d: dict, key: str):
-    """Determine whether a key is missing from a dictionary."""
-    try:
-        d.get(key)
-        return False
-    except KeyError:
-        return True
-
-
-def perform_fetches(token: str, column_names: List[str]):
+def perform_fetches(token: str, column_names: List[str]) -> List[List[Any]]:
     """Coordinate all data fetches until no data is returned."""
     logger = logging.getLogger('email-info-fetcher')
 
-    data_list = [
-        column_names,
-        ]
-
-    page_number = 0
+    raw_json_records: List[Dict] = []
+    page_number: int = 0
     while True:
         page_number += 1
         response = request_page(page_number, token)
@@ -89,21 +77,34 @@ def perform_fetches(token: str, column_names: List[str]):
             exit(1)
 
         page_data = response.json()
-        page_data = page_data['data']
+        page_data: List[Dict] = page_data['data']
         if len(page_data) == 0:
             break
 
-        for datum in page_data:
-            missing_keys = [column_name for column_name in column_names if key_is_missing(datum, column_name)]
-            if len(missing_keys) > 0:
-                logger.error('Missing keys detected: [%s]', ', '.join(missing_keys))
-                sys.exit(1)
-            data_list.append([datum[column_name] for column_name in column_names])
+        if column_names is not None:
+            for n, datum in enumerate(page_data):
+                missing_keys = [column_name for column_name in column_names if datum.get(column_name) is None]
+                if len(missing_keys) > 0:
+                    logger.error('Missing keys detected on page %s, record %s. Missing keys: [%s]. Aborting',
+                                 page_number,
+                                 n,
+                                 ', '.join(missing_keys))
+                    sys.exit(1)
+                raw_json_records.append({key: datum[key] for key in column_names})
+        else:
+            raw_json_records.extend(page_data)
+
+    if column_names is None:
+        column_names = sorted({item for record in raw_json_records for item in record.keys()})
+
+    data_list = [column_names]
+    for record in raw_json_records:
+        data_list.append([record[key] for key in column_names])
 
     return data_list
 
 
-def write_data_to_csv(filename, data):
+def write_data_to_csv(filename, data) -> None:
     """Write the data to the provided filename, as  CSV format.
 
     Existing data will be truncated.
@@ -117,7 +118,7 @@ def write_data_to_csv(filename, data):
             csv_writer.writerow(record)
 
 
-def main(token: str, filename: str, column_names: List[str]):
+def main(token: str, filename: str, column_names: Optional[List[str]]) -> None:
     """Application entrypoint."""
     logger = logging.getLogger('email-info-fetcher')
     logger.info('Startup')
@@ -126,7 +127,7 @@ def main(token: str, filename: str, column_names: List[str]):
     logger.info('Done')
 
 
-def logging_level_from_string(log_level: str):
+def logging_level_from_string(log_level: str) -> int:
     """Translate a text logging level to it's equivilent object.
 
     Input Value | Mapping
@@ -153,43 +154,6 @@ def logging_level_from_string(log_level: str):
     return logging_level
 
 
-def main_column_list() -> List[str]:
-    """Return the full list of permissible column names."""
-    return [
-        'id',
-        'user_id',
-        'aliasable_id',
-        'aliasable_type',
-        'local_part',
-        'extension',
-        'domain',
-        'email',
-        'active',
-        'description',
-        'emails_forwarded',
-        'emails_blocked',
-        'emails_replied',
-        'emails_sent',
-        'recipients',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-        ]
-
-
-def validate_user_column_selection(selection: List[str]) -> bool:
-    """Validate the list of supplied columns against the master list."""
-    logger = logging.getLogger('email-info-fetcher')
-    main_list = main_column_list()
-    for column_name in selection:
-        if column_name not in main_list:
-            logger.warning('Column "%s" not in main list', column_name)
-            return False
-        else:
-            logger.debug('Column "%s" in main list', column_name)
-    return True
-
-
 if __name__ == '__main__':
     parser = argument_parser_factory()
     args = parser.parse_args()
@@ -198,11 +162,7 @@ if __name__ == '__main__':
     logger_factory(logging_level)
     logger = logging.getLogger('email-info-fetcher')
 
-    if args.columns is None:
-        column_names = main_column_list()
-    else:
-        column_names = [column_name.strip() for column_name in args.columns.split(',')]
-        if validate_user_column_selection(column_names) is False:
-            exit(1)
-
-    main(args.token, args.filename, column_names)
+    columns: Optional[List[str]] = None
+    if args.columns is not None:
+        columns = [s.strip() for s in args.columns.split(',')]
+    main(args.token, args.output_file, columns)

@@ -47,7 +47,7 @@ usage: addyio-data-fetch.py [-h]
                               token filename
 
 positional arguments:
-  token                 The Addy.io API token
+  token                 The addy.io API token, or the file in which the token is the first line
   filename              The filename to overwrite with CSV data
 
 optional arguments:
@@ -92,7 +92,7 @@ readonly Now
 declare -r TokenFile="${HOME}/.addyio/token-file"
 declare -r BackupFile="${HOME}/backups/addyio/addyio-mail-list-${Now}.csv"
 
-addyio-data-fetch.py "$(< "${TokenFile}")" "${BackupFile}"
+addyio-data-fetch.py "${TokenFile}" "${BackupFile}"
 exit
 ```
 

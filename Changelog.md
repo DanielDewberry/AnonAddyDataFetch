@@ -2,6 +2,7 @@
 
 ## 2023-08-14
 
+- Enable CLI to accept the token-file, in which the first line is the token
 - API change lead to an issue with the column selection logic; the logic has been re-written to be fully dynamic
 - Improved missing column identification and reporting
 - Added project annotations

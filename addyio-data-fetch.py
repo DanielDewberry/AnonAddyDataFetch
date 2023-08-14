@@ -15,7 +15,7 @@ import requests
 def argument_parser_factory() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('token', help='The addy.io API token')
+    parser.add_argument('token', help='The addy.io API token, or the file in which the token is the first line')
     parser.add_argument('output_file', help='The filename to overwrite with CSV data')
     parser.add_argument('--log-level',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
@@ -165,4 +165,12 @@ if __name__ == '__main__':
     columns: Optional[List[str]] = None
     if args.columns is not None:
         columns = [s.strip() for s in args.columns.split(',')]
-    main(args.token, args.output_file, columns)
+
+
+    token = args.token
+    try:
+        with open(args.token, 'r') as fp:
+            token = fp.readline().strip()
+    except FileNotFoundError:
+        pass
+    main(token, args.output_file, columns)

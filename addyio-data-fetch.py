@@ -164,10 +164,9 @@ if __name__ == '__main__':
 
     columns: Optional[List[str]] = [s.strip() for s in args.columns.split(',')] if args.columns is not None else None
 
-    token = args.token
     try:
         with open(args.token, 'r') as fp:
             token = fp.readline().strip()
+            main(token, args.output_file, columns)
     except FileNotFoundError:
-        pass
-    main(token, args.output_file, columns)
+        main(args.token, args.output_file, columns)

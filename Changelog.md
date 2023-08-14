@@ -6,7 +6,8 @@
 - API change lead to an issue with the column selection logic; the logic has been re-written to be fully dynamic
 - Improved missing column identification and reporting
 - Added project annotations
-- General reduction in source code 19%: 208 lines to 168
+- Refactor sections of source-code
+- General reduction in source code
 
 
 ## 2023-08-10

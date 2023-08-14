@@ -162,10 +162,7 @@ if __name__ == '__main__':
     logger_factory(logging_level)
     logger = logging.getLogger('email-info-fetcher')
 
-    columns: Optional[List[str]] = None
-    if args.columns is not None:
-        columns = [s.strip() for s in args.columns.split(',')]
-
+    columns: Optional[List[str]] = [s.strip() for s in args.columns.split(',')] if args.columns is not None else None
 
     token = args.token
     try:

@@ -1,5 +1,11 @@
 # Change log
 
+## 2023-08-16
+
+- Enable token-file on CLI
+- Refactoring
+
+
 ## 2023-08-14
 
 - Enable CLI to accept the token-file, in which the first line is the token
